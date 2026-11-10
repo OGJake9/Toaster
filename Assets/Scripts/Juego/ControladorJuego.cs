@@ -3,7 +3,8 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Conecta la física con el estado del juego. Es dueño del EstadoJuego.
-/// Crea una tostada en cada lanzamiento y suma puntos cuando se pega en la pared.
+/// Crea una tostada en cada lanzamiento, suma puntos cuando se pega en la pared,
+/// aplica la producción automática y abre/cierra la tienda (pausando el juego).
 /// </summary>
 public class ControladorJuego : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class ControladorJuego : MonoBehaviour
     [SerializeField] private Tostada prefabTostada;
 
     public EstadoJuego Estado { get; private set; } = new EstadoJuego();
+    public bool TiendaAbierta { get; private set; }
 
     private void OnEnable()
     {
@@ -20,6 +22,33 @@ public class ControladorJuego : MonoBehaviour
     private void OnDisable()
     {
         if (palanca != null) palanca.OnLanzamiento -= AlLanzar;
+        Time.timeScale = 1f;
+    }
+
+    private void Update()
+    {
+        // Producción automática (con la tienda abierta Time.deltaTime = 0, así que se pausa).
+        Estado.Producir(Time.deltaTime);
+
+        if (Keyboard.current == null) return;
+
+        if (Keyboard.current.tKey.wasPressedThisFrame)
+            AbrirTienda(!TiendaAbierta);
+        else if (TiendaAbierta && Keyboard.current.escapeKey.wasPressedThisFrame)
+            AbrirTienda(false);
+    }
+
+    public void AbrirTienda(bool abrir)
+    {
+        TiendaAbierta = abrir;
+        Time.timeScale = abrir ? 0f : 1f;              // pausa toda la física
+        if (palanca != null) palanca.EntradaHabilitada = !abrir;
+    }
+
+    public void ComprarMejora(TipoMejora tipo)
+    {
+        if (Estado.Comprar(tipo))
+            Debug.Log($"Comprado: {EstadoJuego.Mejoras[(int)tipo].nombre} → nivel {Estado.Nivel(tipo)}");
     }
 
     private void AlLanzar(Vector2 posicion, Vector2 velocidad)
@@ -44,20 +73,7 @@ public class ControladorJuego : MonoBehaviour
 
     private void AlPegarseEnPared(Tostada tostada)
     {
-        Estado.RegistrarImpactoPared();
-        Debug.Log($"¡Tostada pegada en la pared! Tostadas: {Estado.tostadas}");
-    }
-
-    private void Update()
-    {
-        // TEMPORAL para pruebas: tecla M compra una mejora del resorte.
-        if (Keyboard.current != null && Keyboard.current.mKey.wasPressedThisFrame)
-        {
-            double costo = Estado.CostoMejoraResorte();
-            if (Estado.ComprarMejoraResorte())
-                Debug.Log($"Mejora comprada → nivel {Estado.nivelResorte}, k = {Estado.ConstanteResorte():F1} N/m");
-            else
-                Debug.Log($"Faltan tostadas: la mejora cuesta {costo}, tienes {Estado.tostadas}");
-        }
+        int ganadas = Estado.RegistrarImpactoPared();
+        Debug.Log($"¡Impacto! +{ganadas} | Tostadas: {Estado.tostadas:0}");
     }
 }

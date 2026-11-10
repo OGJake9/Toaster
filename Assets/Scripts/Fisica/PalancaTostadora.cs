@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 ///   m·x'' + c·x' + k·x = 0      →      a = (-k·x - c·v) / m
 ///
 /// x = desplazamiento de la plataforma respecto al equilibrio (negativo = comprimido).
-/// Mientras el jugador mantiene presionado (Espacio o clic), la plataforma baja y
+/// Mientras el jugador mantiene presionado Espacio, la plataforma baja y
 /// comprime el resorte. Al soltar, el resorte la empuja hacia arriba; cuando la
 /// plataforma cruza el punto de equilibrio subiendo, la tostada sale disparada con
 /// la velocidad que tenga la plataforma en ese instante.
@@ -34,7 +34,7 @@ public class PalancaTostadora : MonoBehaviour
     [SerializeField] private float compresionMaxima = 0.3f;
     [Tooltip("Velocidad a la que baja la plataforma mientras se presiona [m/s]")]
     [SerializeField] private float velocidadCarga = 0.6f;
-    [Tooltip("Tiempo para que aparezca una nueva tostada tras el lanzamiento [s]")]
+    [Tooltip("Recarga [s] solo si no hay controlador; con controlador la define la mejora Recarga rápida")]
     [SerializeField] private float tiempoRecarga = 0.8f;
 
     /// <summary>Se dispara al lanzar: (posición inicial, velocidad inicial).</summary>
@@ -57,6 +57,12 @@ public class PalancaTostadora : MonoBehaviour
     public float CompresionAlSoltar { get; private set; }
     public bool TostadaCargada => tostadaCargada;
 
+    /// <summary>La tienda la desactiva para que el teclado no cargue el resorte.</summary>
+    public bool EntradaHabilitada { get; set; } = true;
+
+    /// <summary>0 = sin cargar, 1 = compresión máxima (para la barra de carga).</summary>
+    public float CargaNormalizada => armada ? Mathf.Clamp01(-x / compresionMaxima) : 0f;
+
     private void Start()
     {
         posicionReposo = plataforma.localPosition;
@@ -65,9 +71,10 @@ public class PalancaTostadora : MonoBehaviour
     private void Update()
     {
         // La entrada se lee en Update; la física se integra en FixedUpdate.
-        bool teclado = Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
-        bool raton = Mouse.current != null && Mouse.current.leftButton.isPressed;
-        presionando = teclado || raton;
+        // Solo Espacio: el clic del ratón queda libre para los botones de la interfaz.
+        presionando = EntradaHabilitada
+                      && Keyboard.current != null
+                      && Keyboard.current.spaceKey.isPressed;
     }
 
     private void FixedUpdate()
@@ -109,7 +116,7 @@ public class PalancaTostadora : MonoBehaviour
             {
                 armada = false;
                 tostadaCargada = false;
-                temporizadorRecarga = tiempoRecarga;
+                temporizadorRecarga = controlador != null ? controlador.Estado.TiempoRecarga() : tiempoRecarga;
 
                 Vector2 direccion = transform.up;   // eje de la tostadora (incluye su rotación)
                 OnLanzamiento?.Invoke(plataforma.position, direccion * v);
