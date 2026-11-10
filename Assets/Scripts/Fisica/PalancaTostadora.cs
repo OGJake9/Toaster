@@ -46,6 +46,7 @@ public class PalancaTostadora : MonoBehaviour
     private bool presionando;
     private bool presionandoAnterior;
     private bool tostadaCargada = true;
+    private bool armada;             // true solo si el jugador comprimió el resorte
     private float temporizadorRecarga;
     private Vector3 posicionReposo;
 
@@ -91,6 +92,7 @@ public class PalancaTostadora : MonoBehaviour
             // El jugador empuja la palanca: desplazamiento controlado, sin dinámica.
             x = Mathf.MoveTowards(x, -compresionMaxima, velocidadCarga * dt);
             v = 0f;
+            armada = true;
         }
         else
         {
@@ -100,9 +102,12 @@ public class PalancaTostadora : MonoBehaviour
             v += a * dt;   // primero la velocidad...
             x += v * dt;   // ...luego la posición con la velocidad nueva (más estable)
 
-            // Lanzamiento: la plataforma cruza el equilibrio subiendo.
-            if (tostadaCargada && xAnterior < 0f && x >= 0f && v > 0f)
+            // Lanzamiento: la plataforma cruza el equilibrio subiendo, y SOLO si el
+            // jugador la armó. Sin esta condición, cada oscilación libre del resorte
+            // (después del disparo) lanzaría tostadas débiles solas.
+            if (armada && tostadaCargada && xAnterior < 0f && x >= 0f && v > 0f)
             {
+                armada = false;
                 tostadaCargada = false;
                 temporizadorRecarga = tiempoRecarga;
 

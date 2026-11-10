@@ -3,12 +3,12 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Conecta la física con el estado del juego. Es dueño del EstadoJuego.
-/// Por ahora solo registra lanzamientos y escribe datos en la consola para
-/// verificar la física; la UI y la tostada voladora llegan en las siguientes fases.
+/// Crea una tostada en cada lanzamiento y suma puntos cuando se pega en la pared.
 /// </summary>
 public class ControladorJuego : MonoBehaviour
 {
     [SerializeField] private PalancaTostadora palanca;
+    [SerializeField] private Tostada prefabTostada;
 
     public EstadoJuego Estado { get; private set; } = new EstadoJuego();
 
@@ -26,16 +26,26 @@ public class ControladorJuego : MonoBehaviour
     {
         Estado.RegistrarLanzamiento();
 
-        // Comparación teoría vs. simulación.
-        // Sin amortiguamiento, la energía elástica se convierte en cinética:
-        //   ½·k·x0² = ½·m·v²   →   v = x0·√(k/m)
+        // Comparación teoría vs. simulación del resorte.
+        // Sin amortiguamiento:  ½·k·x0² = ½·m·v²   →   v = x0·√(k/m)
         float k = Estado.ConstanteResorte();
         float x0 = palanca.CompresionAlSoltar;
         float vTeorica = x0 * Mathf.Sqrt(k / palanca.Masa);
 
         Debug.Log($"Lanzamiento #{Estado.lanzamientos} | k = {k:F1} N/m | x0 = {x0:F3} m | " +
-                  $"v simulada = {velocidad.magnitude:F2} m/s | v teórica (sin c) = {vTeorica:F2} m/s | " +
-                  $"tostadas = {Estado.tostadas}");
+                  $"v simulada = {velocidad.magnitude:F2} m/s | v teórica (sin c) = {vTeorica:F2} m/s");
+
+        if (prefabTostada != null)
+        {
+            Tostada t = Instantiate(prefabTostada);
+            t.Iniciar(posicion, velocidad, AlPegarseEnPared);
+        }
+    }
+
+    private void AlPegarseEnPared(Tostada tostada)
+    {
+        Estado.RegistrarImpactoPared();
+        Debug.Log($"¡Tostada pegada en la pared! Tostadas: {Estado.tostadas}");
     }
 
     private void Update()

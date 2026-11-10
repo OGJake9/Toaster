@@ -17,7 +17,7 @@ public class EstadoJuego
 
     // ---------- Parámetros de balance ----------
     // Constantes compartidas: el servidor usará exactamente los mismos valores.
-    public const float K_BASE = 40f;                 // constante del resorte base [N/m]
+    public const float K_BASE = 80f;                 // constante del resorte base [N/m]
     public const float K_FACTOR_NIVEL = 1.25f;       // cada nivel multiplica k por este factor
     public const double COSTO_BASE_RESORTE = 10;     // costo del nivel 1 [tostadas]
     public const double COSTO_FACTOR_RESORTE = 1.6;  // crecimiento exponencial del costo
@@ -37,9 +37,14 @@ public class EstadoJuego
     }
 
     /// <summary>Se llama cada vez que la palanca lanza una tostada.</summary>
-    public void RegistrarLanzamiento(int tostadasGanadas = 1)
+    public void RegistrarLanzamiento()
     {
         lanzamientos++;
+    }
+
+    /// <summary>Se llama cuando una tostada se pega en la pared: solo eso da puntos.</summary>
+    public void RegistrarImpactoPared(int tostadasGanadas = 1)
+    {
         tostadas += tostadasGanadas;
         tostadasTotales += tostadasGanadas;
     }
