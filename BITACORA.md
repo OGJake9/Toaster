@@ -36,3 +36,9 @@
 - **Física trabajada:** movimiento parabólico (a = −g, Euler semi-implícito con 4 sub-pasos para que no atraviese superficies); detección AABB y resolución por el eje de menor penetración; choque perfectamente inelástico contra la pared; deslizamiento con fricción viscosa (m·dv/dt = −m·g − b·v, velocidad terminal m·g/b); rebote en el suelo con coeficiente de restitución.
 - **Problemas y solución:** el resorte disparaba tostadas solas en cada oscilación después del lanzamiento → se agregó la condición de que el jugador lo haya armado. La carga se sentía poco decisiva → velocidad de carga bajada a 0.25 m/s.
 - **Próximo paso:** economía incremental y UI (contador, tienda de mejoras, barra de carga).
+
+### 2026-11-09 — Sesión 4: tienda y economía incremental
+- **Qué se hizo:** pantalla de tienda con 4 mejoras (Resorte reforzado, Mantequilla extra, Recarga rápida, Ayudante de cocina), costos que crecen exponencialmente y nivel máximo por mejora. HUD con contador, producción por segundo y barra de carga. Toda la interfaz se construye desde código (`InterfazJuego`). La tienda pausa la simulación con Time.timeScale = 0.
+- **Física trabajada:** la mejora del resorte cambia k en tiempo real (k = 80·1.25ⁿ N/m), lo que altera la velocidad de salida y el alcance parabólico.
+- **Problemas y solución:** el clic en los botones de la tienda también cargaba el resorte → la carga quedó solo con Espacio. Advertencia de API obsoleta (FindFirstObjectByType) → reemplazada por FindAnyObjectByType.
+- **Próximo paso:** despliegue en los nodos de seguridad.
