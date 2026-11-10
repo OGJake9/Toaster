@@ -9,7 +9,7 @@
 | Física | Dónde se usa | Script | Estado |
 |---|---|---|---|
 | Masa-resorte-amortiguador | Palanca de la tostadora (velocidad de salida de la tostada) | `Scripts/Fisica/` | Hecho |
-| Movimiento parabólico | Vuelo de la tostada | `Scripts/Fisica/` | Pendiente |
+| Movimiento parabólico | Vuelo de la tostada | `Scripts/Fisica/` | Hecho |
 | Colisiones | Choque con pared y suelo, tostada pegada y deslizándose | `Scripts/Fisica/` | Pendiente |
 
 ---
@@ -30,3 +30,9 @@
 - **Física trabajada:** masa-resorte-amortiguador. Se compara la velocidad simulada con la teórica sin amortiguamiento v = x0·√(k/m); la simulada es menor por la disipación del amortiguador.
 - **Problemas y solución:** la escena no quedaba en el commit si no se guardaba antes (Ctrl+S).
 - **Próximo paso:** tostada en movimiento parabólico y colisiones con pared y suelo.
+
+### 2026-11-09 — Sesión 3: movimiento parabólico y colisiones
+- **Qué se hizo:** `Tostada` con tres estados (volando, deslizando en la pared, en el suelo) y `ColisionAABB` como caja de colisión propia en lugar de BoxCollider2D. Solo suma puntos si la tostada se pega en la pared. Constante base del resorte subida a 80 N/m para alejar la pared y que la carga importe.
+- **Física trabajada:** movimiento parabólico (a = −g, Euler semi-implícito con 4 sub-pasos para que no atraviese superficies); detección AABB y resolución por el eje de menor penetración; choque perfectamente inelástico contra la pared; deslizamiento con fricción viscosa (m·dv/dt = −m·g − b·v, velocidad terminal m·g/b); rebote en el suelo con coeficiente de restitución.
+- **Problemas y solución:** el resorte disparaba tostadas solas en cada oscilación después del lanzamiento → se agregó la condición de que el jugador lo haya armado. La carga se sentía poco decisiva → velocidad de carga bajada a 0.25 m/s.
+- **Próximo paso:** economía incremental y UI (contador, tienda de mejoras, barra de carga).
