@@ -219,7 +219,7 @@ Transform:
   m_GameObject: {fileID: 417266369}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.4, y: 0.4, z: 0}
+  m_LocalPosition: {x: 4.26, y: 0.4, z: 0}
   m_LocalScale: {x: 0.4, y: 4.6, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -629,7 +629,7 @@ Transform:
   m_GameObject: {fileID: 1524159373}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: -0.21643952, w: 0.97629607}
-  m_LocalPosition: {x: -1.5, y: -1.5, z: 0}
+  m_LocalPosition: {x: -3.7, y: -1.5, z: 0}
   m_LocalScale: {x: 1, y: 0.8, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -705,6 +705,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1555855739}
   - component: {fileID: 1555855738}
+  - component: {fileID: 1555855740}
   m_Layer: 0
   m_Name: Juego
   m_TagString: Untagged
@@ -726,6 +727,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ControladorJuego
   palanca: {fileID: 1524159374}
   prefabTostada: {fileID: -90738521095906009, guid: ccec6214fe9ec5b48b7d2a71269fd5c5, type: 3}
+  api: {fileID: 1555855740}
+  menu: {fileID: 1722974034}
+  intervaloAutoguardado: 30
 --- !u!4 &1555855739
 Transform:
   m_ObjectHideFlags: 0
@@ -736,6 +740,66 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.15043, y: -1.39223, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1555855740
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1555855737}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54e99cb197ef78f4f87b5f930652dcbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ServicioAPI
+  urlBaseEditor: http://localhost:8000/api
+  timeoutSegundos: 8
+--- !u!1 &1722974033
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1722974035}
+  - component: {fileID: 1722974034}
+  m_Layer: 0
+  m_Name: Menu
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1722974034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722974033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e34e34a86041b7c479f05b3f0802a18d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MenuInicio
+  controlador: {fileID: 1555855738}
+  api: {fileID: 1555855740}
+--- !u!4 &1722974035
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722974033}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.11073, y: -0.01562, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -841,8 +905,8 @@ Transform:
   m_GameObject: {fileID: 1792607485}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -2.1, z: 0}
-  m_LocalScale: {x: 10, y: 0.4, z: 1}
+  m_LocalPosition: {x: 0, y: -2.2, z: 0}
+  m_LocalScale: {x: 10, y: 0.6, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -858,3 +922,4 @@ SceneRoots:
   - {fileID: 1792607488}
   - {fileID: 417266372}
   - {fileID: 516839247}
+  - {fileID: 1722974035}
