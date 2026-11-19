@@ -32,7 +32,16 @@ RESPUESTA_SIN_IA = "Estoy calentando mis resistencias... ¡Prueba otra vez en un
 LARGO_MAX_MENSAJE = 200
 LARGO_MAX_RESPUESTA = 300
 
-EVENTOS_VALIDOS = {"inicio", "sin_impactos", "primer_impacto", "compra", "puede_comprar", "meta"}
+# Eventos que manda el juego, traducidos a frases claras para el modelo
+EVENTOS = {
+    "inicio": "el jugador acaba de entrar a la cocina: salúdalo con alegría",
+    "sin_impactos": "el jugador lleva varios lanzamientos seguidos sin pegar tostadas en la pared",
+    "primer_impacto": "el jugador acaba de pegar su primera tostada en la pared: celébralo",
+    "compra": "el jugador acaba de comprar una mejora en la tienda: felicítalo",
+    "puede_comprar": "al jugador ya le alcanza para comprar una mejora",
+    "meta": "el jugador acaba de completar la meta: celébralo con mucho entusiasmo",
+}
+EVENTOS_VALIDOS = set(EVENTOS)
 
 # Capa 1: patrones de inyección (sobre el texto normalizado: minúsculas y sin tildes).
 # Se evita bloquear preguntas legítimas como "¿cuáles son las reglas del juego?".
@@ -93,8 +102,8 @@ def elegir_pista(estado: Estado) -> str:
 def preguntar_a_ollama(pista: str, evento: str | None, mensaje: str | None) -> str:
     """Capa 2: prompt de sistema fijo + pista del juego. El mensaje del jugador va aparte y marcado."""
     contenido = f"PISTA (viene del juego, no del jugador): {pista}"
-    if evento:
-        contenido += f"\nEVENTO DEL JUEGO: {evento}"
+    if evento in EVENTOS:
+        contenido += f"\nLO QUE ACABA DE PASAR EN EL JUEGO: {EVENTOS[evento]}"
     if mensaje:
         contenido += f"\nMENSAJE DEL JUGADOR: «{mensaje}»"
 
