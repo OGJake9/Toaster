@@ -139,3 +139,7 @@ crashlytics-build.properties
 
 # Artefactos temporales del build Web (Burst)
 /Data/
+
+# Secretos del servidor (nunca al repo)
+servidor/**/.env
+servidor/**/certs/

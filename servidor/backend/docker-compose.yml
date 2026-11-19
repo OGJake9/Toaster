@@ -1,0 +1,23 @@
+services:
+  api:
+    build: .
+    image: tostadora-api
+    container_name: tostadora-api
+    env_file: .env
+    restart: unless-stopped
+    # Red del host: la API escucha directo en la IP de Tailscale (BIND_HOST) y así el
+    # firewall ufw de la VM sí se aplica (Docker con puertos publicados se salta ufw).
+    network_mode: host
+    # Endurecimiento del contenedor
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 128
+    volumes:
+      - ./certs/mysql-ca.pem:/certs/mysql-ca.pem:ro
+      - /var/log/tostadora:/var/log/tostadora
