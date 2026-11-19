@@ -143,3 +143,6 @@ crashlytics-build.properties
 # Secretos del servidor (nunca al repo)
 servidor/**/.env
 servidor/**/certs/
+
+# Instaladores y ejecutables (nunca al repo)
+*.exe

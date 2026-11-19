@@ -36,13 +36,17 @@ public class EntradaRanking
 public class ServicioAPI : MonoBehaviour
 {
     [Tooltip("URL del backend al probar en el Editor. En el build Web se usa /api del mismo dominio.")]
-    [SerializeField] private string urlBaseEditor = "http://localhost:8000/api";
+    [SerializeField] private string urlBaseEditor = "http://100.95.114.35:8000/api";
     [SerializeField] private int timeoutSegundos = 8;
+    // La IA puede tardar más (sobre todo la primera vez, mientras carga el modelo)
+    private const int TimeoutTosti = 30;
 
     // ---------- DTOs (formato JSON que espera el servidor) ----------
     [Serializable] private class Credenciales { public string username; public string password; }
     [Serializable] private class ErrorAPI { public string detail; }
     [Serializable] private class RespuestaRanking { public EntradaRanking[] jugadores; }
+    [Serializable] private class PeticionTosti { public string mensaje; public string evento; }
+    [Serializable] private class RespuestaTosti { public string respuesta; }
 
     private string UrlBase
     {
@@ -117,9 +121,35 @@ public class ServicioAPI : MonoBehaviour
         }));
     }
 
+    // ---------- Tosti (NPC con IA) ----------
+
+    /// <summary>
+    /// Envía un mensaje del jugador o un evento del juego a Tosti. El servidor decide la pista
+    /// con el estado guardado y filtra la respuesta. El juego nunca habla con la IA directamente.
+    /// </summary>
+    public void HablarConTosti(string mensaje, string evento, Action<Resultado, string> alTerminar)
+    {
+        string cuerpo = JsonUtility.ToJson(new PeticionTosti { mensaje = mensaje ?? "", evento = evento ?? "" });
+        StartCoroutine(Enviar("POST", "/tosti", cuerpo, TimeoutTosti, (r, texto) =>
+        {
+            string respuesta = "";
+            if (r.exito)
+            {
+                RespuestaTosti dato = JsonUtility.FromJson<RespuestaTosti>(texto);
+                respuesta = dato != null ? dato.respuesta : "";
+            }
+            alTerminar(r, respuesta);
+        }));
+    }
+
     // ---------- Núcleo HTTP ----------
 
     private IEnumerator Enviar(string metodo, string ruta, string cuerpoJson, Action<Resultado, string> alTerminar)
+    {
+        return Enviar(metodo, ruta, cuerpoJson, timeoutSegundos, alTerminar);
+    }
+
+    private IEnumerator Enviar(string metodo, string ruta, string cuerpoJson, int timeout, Action<Resultado, string> alTerminar)
     {
         using (UnityWebRequest req = new UnityWebRequest(UrlBase + ruta, metodo))
         {
@@ -129,7 +159,7 @@ public class ServicioAPI : MonoBehaviour
                 req.SetRequestHeader("Content-Type", "application/json");
             }
             req.downloadHandler = new DownloadHandlerBuffer();
-            req.timeout = timeoutSegundos;
+            req.timeout = timeout;
 
             yield return req.SendWebRequest();
 

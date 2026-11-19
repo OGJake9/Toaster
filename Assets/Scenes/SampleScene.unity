@@ -729,7 +729,9 @@ MonoBehaviour:
   prefabTostada: {fileID: -90738521095906009, guid: ccec6214fe9ec5b48b7d2a71269fd5c5, type: 3}
   api: {fileID: 1555855740}
   menu: {fileID: 1722974034}
+  panelTosti: {fileID: 1930375857}
   intervaloAutoguardado: 30
+  lanzamientosParaAyuda: 5
 --- !u!4 &1555855739
 Transform:
   m_ObjectHideFlags: 0
@@ -757,7 +759,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 54e99cb197ef78f4f87b5f930652dcbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ServicioAPI
-  urlBaseEditor: http://localhost:8000/api
+  urlBaseEditor: http://100.95.114.35:8000/api
   timeoutSegundos: 8
 --- !u!1 &1722974033
 GameObject:
@@ -911,6 +913,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1930375856
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1930375858}
+  - component: {fileID: 1930375857}
+  m_Layer: 0
+  m_Name: Tosti
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1930375857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930375856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 529e1cd1ff54b7e48975dc4cb54acaf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PanelTosti
+  controlador: {fileID: 1555855738}
+  api: {fileID: 1555855740}
+  esperaEntreEventos: 15
+--- !u!4 &1930375858
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1930375856}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.11073, y: -0.01562, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -923,3 +972,4 @@ SceneRoots:
   - {fileID: 417266372}
   - {fileID: 516839247}
   - {fileID: 1722974035}
+  - {fileID: 1930375858}

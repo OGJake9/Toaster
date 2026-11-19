@@ -50,6 +50,9 @@ public class EstadoJuego
     public const float RECARGA_BASE = 0.8f;         // [s]
     public const float RECARGA_FACTOR = 0.85f;      // cada nivel multiplica el tiempo
     public const double PRODUCCION_POR_AYUDANTE = 0.5; // [tostadas/s] por nivel
+    public const double META_TOSTADAS = 300;        // objetivo del vertical slice (igual que en el backend)
+
+    public bool MetaAlcanzada() => tostadasTotales >= META_TOSTADAS;
 
     // ---------- Niveles y compras ----------
 

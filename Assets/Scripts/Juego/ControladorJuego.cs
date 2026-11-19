@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -5,7 +6,8 @@ using UnityEngine.InputSystem;
 /// Conecta la física con el estado del juego. Es dueño del EstadoJuego.
 /// - Arranca en el menú (juego pausado) hasta que se inicia una partida.
 /// - Crea una tostada en cada lanzamiento y suma puntos cuando se pega en la pared.
-/// - Aplica la producción automática y abre/cierra la tienda.
+/// - Aplica la producción automática, abre/cierra la tienda y detecta la meta.
+/// - Avisa a Tosti de los momentos importantes de la partida.
 /// - Si hay sesión en línea, guarda la partida en el servidor cada cierto tiempo y al salir.
 /// </summary>
 public class ControladorJuego : MonoBehaviour
@@ -14,15 +16,28 @@ public class ControladorJuego : MonoBehaviour
     [SerializeField] private Tostada prefabTostada;
     [SerializeField] private ServicioAPI api;
     [SerializeField] private MenuInicio menu;
+    [SerializeField] private PanelTosti panelTosti;
     [Tooltip("Cada cuántos segundos de juego se guarda la partida en el servidor")]
     [SerializeField] private float intervaloAutoguardado = 30f;
+    [Tooltip("Lanzamientos seguidos sin impacto antes de que Tosti dé una pista")]
+    [SerializeField] private int lanzamientosParaAyuda = 5;
 
     public EstadoJuego Estado { get; private set; } = new EstadoJuego();
     public bool TiendaAbierta { get; private set; }
     public bool EnMenu { get; private set; } = true;
+    public bool MostrandoMeta { get; private set; }
+    /// <summary>Segundos de juego activo (sin contar menú, tienda ni pantallas de pausa).</summary>
+    public float TiempoPartida { get; private set; }
+
+    private bool Pausado => EnMenu || TiendaAbierta || MostrandoMeta;
+    private bool Escribiendo => panelTosti != null && panelTosti.Escribiendo;
 
     private float tiempoDesdeGuardado;
     private bool saliendo;
+    private bool metaAnunciada;
+    private bool avisoCompraDado;
+    private int lanzamientosSinImpacto;
+    private int impactosSesion;
 
     private void OnEnable()
     {
@@ -44,24 +59,24 @@ public class ControladorJuego : MonoBehaviour
     {
         if (EnMenu) return;
 
-        // Producción automática (pausada si la tienda está abierta, porque Time.deltaTime = 0).
+        // Mientras se escribe a Tosti, Espacio no carga el resorte.
+        if (palanca != null) palanca.EntradaHabilitada = !Pausado && !Escribiendo;
+
+        if (!Pausado) TiempoPartida += Time.deltaTime;
+
+        // Producción automática (pausada si hay pausa, porque Time.deltaTime = 0).
         Estado.Producir(Time.deltaTime);
 
         // Autoguardado en el servidor.
         if (Sesion.EnLinea && api != null)
         {
             tiempoDesdeGuardado += Time.deltaTime;
-            if (tiempoDesdeGuardado >= intervaloAutoguardado)
-            {
-                tiempoDesdeGuardado = 0f;
-                api.GuardarPartida(Estado, r =>
-                {
-                    if (!r.exito) Debug.LogWarning($"Autoguardado falló: {r.mensaje}");
-                });
-            }
+            if (tiempoDesdeGuardado >= intervaloAutoguardado) GuardarAhora(null);
         }
 
-        if (Keyboard.current == null) return;
+        RevisarHitos();
+
+        if (Keyboard.current == null || Escribiendo || MostrandoMeta) return;
 
         if (Keyboard.current.tKey.wasPressedThisFrame)
             AbrirTienda(!TiendaAbierta);
@@ -80,10 +95,43 @@ public class ControladorJuego : MonoBehaviour
 
         Estado = estado ?? new EstadoJuego();
         tiempoDesdeGuardado = 0f;
+        TiempoPartida = 0f;
         saliendo = false;
         TiendaAbierta = false;
+        MostrandoMeta = false;
+        metaAnunciada = Estado.MetaAlcanzada();   // si ya la tenía, no se vuelve a anunciar
+        avisoCompraDado = false;
+        lanzamientosSinImpacto = 0;
+        impactosSesion = 0;
         EnMenu = false;
         ActualizarPausa();
+
+        if (panelTosti != null)
+        {
+            panelTosti.Reiniciar();
+            panelTosti.Evento("inicio", true);
+        }
+    }
+
+    /// <summary>Guarda ya en el servidor (si hay sesión). Siempre llama a alTerminar.</summary>
+    public void GuardarAhora(Action<Resultado> alTerminar)
+    {
+        if (!Sesion.EnLinea || api == null)
+        {
+            alTerminar?.Invoke(new Resultado { exito = true });
+            return;
+        }
+
+        tiempoDesdeGuardado = 0f;
+        api.GuardarPartida(Estado, r =>
+        {
+            if (!r.exito)
+            {
+                Debug.LogWarning($"Guardado rechazado o fallido: {r.mensaje}");
+                if (panelTosti != null) panelTosti.Mostrar($"Ups, el servidor no aceptó el último guardado. {r.mensaje}");
+            }
+            alTerminar?.Invoke(r);
+        });
     }
 
     /// <summary>Botón "Guardar y salir" del HUD: guarda, cierra sesión y vuelve al menú.</summary>
@@ -118,30 +166,67 @@ public class ControladorJuego : MonoBehaviour
     {
         EnMenu = true;
         TiendaAbierta = false;
+        MostrandoMeta = false;
         ActualizarPausa();
         if (menu != null) menu.AvisarSalida(mensaje);
+    }
+
+    /// <summary>Botón "¡Seguir tostando!" de la pantalla de meta.</summary>
+    public void CerrarMeta()
+    {
+        MostrandoMeta = false;
+        ActualizarPausa();
     }
 
     // ===================== Tienda =====================
 
     public void AbrirTienda(bool abrir)
     {
-        if (EnMenu) return;
+        if (EnMenu || MostrandoMeta) return;
         TiendaAbierta = abrir;
         ActualizarPausa();
     }
 
     public void ComprarMejora(TipoMejora tipo)
     {
-        if (Estado.Comprar(tipo))
-            Debug.Log($"Comprado: {EstadoJuego.Mejoras[(int)tipo].nombre} → nivel {Estado.Nivel(tipo)}");
+        if (!Estado.Comprar(tipo)) return;
+
+        Debug.Log($"Comprado: {EstadoJuego.Mejoras[(int)tipo].nombre} → nivel {Estado.Nivel(tipo)}");
+        avisoCompraDado = false;
+        if (panelTosti != null) panelTosti.Evento("compra");
     }
 
     private void ActualizarPausa()
     {
-        bool pausado = EnMenu || TiendaAbierta;
-        Time.timeScale = pausado ? 0f : 1f;   // congela toda la física
-        if (palanca != null) palanca.EntradaHabilitada = !pausado;
+        Time.timeScale = Pausado ? 0f : 1f;   // congela toda la física
+        if (palanca != null) palanca.EntradaHabilitada = !Pausado && !Escribiendo;
+    }
+
+    // ===================== Hitos para Tosti =====================
+
+    private void RevisarHitos()
+    {
+        if (!metaAnunciada && Estado.MetaAlcanzada())
+        {
+            metaAnunciada = true;
+            MostrandoMeta = true;
+            ActualizarPausa();
+            if (panelTosti != null) panelTosti.Evento("meta", true);
+            return;
+        }
+
+        if (!avisoCompraDado && AlgunaMejoraComprable())
+        {
+            avisoCompraDado = true;
+            if (panelTosti != null) panelTosti.Evento("puede_comprar");
+        }
+    }
+
+    private bool AlgunaMejoraComprable()
+    {
+        for (int i = 0; i < EstadoJuego.Mejoras.Length; i++)
+            if (Estado.PuedeComprar((TipoMejora)i)) return true;
+        return false;
     }
 
     // ===================== Física → economía =====================
@@ -164,11 +249,19 @@ public class ControladorJuego : MonoBehaviour
             Tostada t = Instantiate(prefabTostada);
             t.Iniciar(posicion, velocidad, AlPegarseEnPared);
         }
+
+        lanzamientosSinImpacto++;
+        if (lanzamientosSinImpacto == lanzamientosParaAyuda && panelTosti != null)
+            panelTosti.Evento("sin_impactos");
     }
 
     private void AlPegarseEnPared(Tostada tostada)
     {
         int ganadas = Estado.RegistrarImpactoPared();
         Debug.Log($"¡Impacto! +{ganadas} | Tostadas: {Estado.tostadas:0}");
+
+        lanzamientosSinImpacto = 0;
+        impactosSesion++;
+        if (impactosSesion == 1 && panelTosti != null) panelTosti.Evento("primer_impacto");
     }
 }

@@ -27,6 +27,9 @@ public class InterfazJuego : MonoBehaviour
     private Text textoProduccion;
     private Text textoJugador;
     private Text textoBotonSalir;
+    private Text textoMeta;
+    private GameObject panelMeta;
+    private Text textoMetaDetalle;
     private RectTransform rellenoCarga;
     private GameObject panelTienda;
     private Text textoTostadasTienda;
@@ -41,7 +44,9 @@ public class InterfazJuego : MonoBehaviour
 
         CrearHUD(canvas);
         CrearTienda(canvas);
+        CrearPanelMeta(canvas);
         panelTienda.SetActive(false);
+        panelMeta.SetActive(false);
     }
 
     private void Update()
@@ -57,6 +62,20 @@ public class InterfazJuego : MonoBehaviour
         textoProduccion.text = produccion > 0 ? $"+{produccion:0.#} por segundo" : "";
         textoJugador.text = Sesion.EnLinea ? $"Jugador: {Sesion.Usuario}" : "Invitado: el progreso no se guarda";
         textoBotonSalir.text = Sesion.EnLinea ? "Guardar y salir" : "Salir";
+        textoMeta.text = e.MetaAlcanzada()
+            ? "¡Meta cumplida!"
+            : $"Meta: {FabricaUI.Formatear(e.tostadasTotales)} / {FabricaUI.Formatear(EstadoJuego.META_TOSTADAS)}";
+
+        if (panelMeta.activeSelf != controlador.MostrandoMeta)
+        {
+            panelMeta.SetActive(controlador.MostrandoMeta);
+            if (controlador.MostrandoMeta)
+            {
+                int seg = Mathf.FloorToInt(controlador.TiempoPartida);
+                textoMetaDetalle.text = $"Llegaste a {EstadoJuego.META_TOSTADAS:0} tostadas en {seg / 60}:{seg % 60:00}.\n" +
+                                        $"Lanzamientos: {e.lanzamientos}   Impactos: {e.impactos}";
+            }
+        }
 
         rellenoCarga.anchorMax = new Vector2(palanca.CargaNormalizada, 1f);
 
@@ -80,6 +99,10 @@ public class InterfazJuego : MonoBehaviour
         textoJugador = FabricaUI.CrearTexto("Jugador", canvas, "", 20, TextAnchor.UpperLeft, FabricaUI.ColorTextoSuave);
         FabricaUI.Colocar(textoJugador.rectTransform, new Vector2(0, 1), new Vector2(24, -112), new Vector2(600, 30));
 
+        textoMeta = FabricaUI.CrearTexto("Meta", canvas, "", 24, TextAnchor.UpperLeft, FabricaUI.ColorBoton);
+        textoMeta.fontStyle = FontStyle.Bold;
+        FabricaUI.Colocar(textoMeta.rectTransform, new Vector2(0, 1), new Vector2(24, -144), new Vector2(600, 34));
+
         Button botonTienda = FabricaUI.CrearBoton("BotonTienda", canvas, "Tienda (T)", () => controlador.AbrirTienda(true));
         FabricaUI.Colocar((RectTransform)botonTienda.transform, new Vector2(1, 1), new Vector2(-24, -20), new Vector2(220, 64));
 
@@ -99,6 +122,29 @@ public class InterfazJuego : MonoBehaviour
         Image relleno = FabricaUI.CrearImagen("Relleno", fondo.transform, FabricaUI.ColorBoton);
         rellenoCarga = relleno.rectTransform;
         FabricaUI.Estirar(rellenoCarga, Vector2.zero, new Vector2(0, 1));
+    }
+
+    // ===================== META =====================
+
+    private void CrearPanelMeta(Transform canvas)
+    {
+        Image overlay = FabricaUI.CrearImagen("PanelMeta", canvas, new Color(0, 0, 0, 0.75f));
+        FabricaUI.Estirar(overlay.rectTransform, Vector2.zero, Vector2.one);
+        panelMeta = overlay.gameObject;
+
+        Image caja = FabricaUI.CrearImagen("Caja", overlay.transform, FabricaUI.ColorPanel);
+        FabricaUI.Colocar(caja.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(700, 360));
+
+        Text titulo = FabricaUI.CrearTexto("Titulo", caja.transform, "¡COCINA COMPLETADA!", 52,
+                                           TextAnchor.MiddleCenter, FabricaUI.ColorBoton);
+        titulo.fontStyle = FontStyle.Bold;
+        FabricaUI.Colocar(titulo.rectTransform, new Vector2(0.5f, 1), new Vector2(0, -36), new Vector2(660, 70));
+
+        textoMetaDetalle = FabricaUI.CrearTexto("Detalle", caja.transform, "", 26, TextAnchor.MiddleCenter, FabricaUI.ColorTexto);
+        FabricaUI.Colocar(textoMetaDetalle.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, 10), new Vector2(660, 90));
+
+        Button seguir = FabricaUI.CrearBoton("Seguir", caja.transform, "¡Seguir tostando!", controlador.CerrarMeta);
+        FabricaUI.Colocar((RectTransform)seguir.transform, new Vector2(0.5f, 0), new Vector2(0, 30), new Vector2(300, 64));
     }
 
     // ===================== TIENDA =====================
