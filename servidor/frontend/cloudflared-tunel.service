@@ -1,0 +1,19 @@
+[Unit]
+Description=Cloudflare Quick Tunnel - Tostadora Incremental (publica Nginx por HTTPS sin abrir puertos)
+After=network-online.target nginx.service
+Wants=network-online.target
+
+[Service]
+# El túnel sale HACIA Cloudflare: no hace falta abrir ningún puerto de entrada en la VM.
+ExecStart=/usr/bin/cloudflared tunnel --no-autoupdate --url http://127.0.0.1:80
+Restart=always
+RestartSec=5
+# Endurecimiento: usuario temporal sin privilegios y sistema de archivos protegido
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
