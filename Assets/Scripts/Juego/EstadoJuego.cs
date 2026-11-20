@@ -102,16 +102,16 @@ public class EstadoJuego
         {
             case TipoMejora.Resorte:
                 return max ? $"k = {KConNivel(n):0} N/m"
-                           : $"k: {KConNivel(n):0} → {KConNivel(n + 1):0} N/m";
+                           : $"k: {KConNivel(n):0} -> {KConNivel(n + 1):0} N/m";
             case TipoMejora.Mantequilla:
                 return max ? $"{PorImpactoConNivel(n)} tostadas por impacto"
-                           : $"Por impacto: {PorImpactoConNivel(n)} → {PorImpactoConNivel(n + 1)} tostadas";
+                           : $"Por impacto: {PorImpactoConNivel(n)} -> {PorImpactoConNivel(n + 1)} tostadas";
             case TipoMejora.Recarga:
                 return max ? $"Recarga: {RecargaConNivel(n):0.00} s"
-                           : $"Recarga: {RecargaConNivel(n):0.00} → {RecargaConNivel(n + 1):0.00} s";
+                           : $"Recarga: {RecargaConNivel(n):0.00} -> {RecargaConNivel(n + 1):0.00} s";
             case TipoMejora.Ayudante:
                 return max ? $"{ProduccionConNivel(n):0.#} tostadas/s"
-                           : $"Automático: {ProduccionConNivel(n):0.#} → {ProduccionConNivel(n + 1):0.#} tostadas/s";
+                           : $"Automático: {ProduccionConNivel(n):0.#} -> {ProduccionConNivel(n + 1):0.#} tostadas/s";
         }
         return "";
     }

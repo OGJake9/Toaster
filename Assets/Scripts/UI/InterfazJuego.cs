@@ -95,19 +95,23 @@ public class InterfazJuego : MonoBehaviour
 
     // ===================== HUD =====================
 
+    // El HUD va sobre la pared crema de la cocina: texto oscuro para que se lea.
+    private static readonly Color ColorHudSuave = new Color(0.36f, 0.24f, 0.13f, 1f);
+    private static readonly Color ColorHudMeta = new Color(0.78f, 0.40f, 0.05f, 1f);
+
     private void CrearHUD(Transform canvas)
     {
-        textoTostadas = FabricaUI.CrearTexto("Tostadas", canvas, "", 40, TextAnchor.UpperLeft, FabricaUI.ColorTexto);
+        textoTostadas = FabricaUI.CrearTexto("Tostadas", canvas, "", 40, TextAnchor.UpperLeft, FabricaUI.ColorTextoBoton);
         textoTostadas.fontStyle = FontStyle.Bold;
         FabricaUI.Colocar(textoTostadas.rectTransform, new Vector2(0, 1), new Vector2(24, -20), new Vector2(600, 56));
 
-        textoProduccion = FabricaUI.CrearTexto("Produccion", canvas, "", 24, TextAnchor.UpperLeft, FabricaUI.ColorTextoSuave);
+        textoProduccion = FabricaUI.CrearTexto("Produccion", canvas, "", 24, TextAnchor.UpperLeft, ColorHudSuave);
         FabricaUI.Colocar(textoProduccion.rectTransform, new Vector2(0, 1), new Vector2(24, -76), new Vector2(600, 36));
 
-        textoJugador = FabricaUI.CrearTexto("Jugador", canvas, "", 20, TextAnchor.UpperLeft, FabricaUI.ColorTextoSuave);
+        textoJugador = FabricaUI.CrearTexto("Jugador", canvas, "", 20, TextAnchor.UpperLeft, ColorHudSuave);
         FabricaUI.Colocar(textoJugador.rectTransform, new Vector2(0, 1), new Vector2(24, -112), new Vector2(600, 30));
 
-        textoMeta = FabricaUI.CrearTexto("Meta", canvas, "", 24, TextAnchor.UpperLeft, FabricaUI.ColorBoton);
+        textoMeta = FabricaUI.CrearTexto("Meta", canvas, "", 24, TextAnchor.UpperLeft, ColorHudMeta);
         textoMeta.fontStyle = FontStyle.Bold;
         FabricaUI.Colocar(textoMeta.rectTransform, new Vector2(0, 1), new Vector2(24, -144), new Vector2(600, 34));
 

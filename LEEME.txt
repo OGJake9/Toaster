@@ -1,0 +1,35 @@
+TOSTADORA INCREMENTAL - Grupo G09
+Simulación - Universidad Militar Nueva Granada
+Autor: Jhon Jairo Vargas Avellaneda
+
+CÓMO ABRIRLO
+- Windows: descomprimir TODA la carpeta y abrir Toaster.exe
+  (no mover el .exe fuera de la carpeta: necesita Toaster_Data y UnityPlayer.dll).
+  Si Windows muestra "Windows protegió su PC": Más información > Ejecutar de todas formas.
+- Mac: descomprimir y abrir Toaster.app con clic derecho > Abrir (la primera vez).
+
+CÓMO JUGAR
+- En el menú elegir "Jugar sin conexión" (no necesita internet ni cuenta).
+- ESPACIO: mantener para comprimir el resorte de la tostadora, soltar para lanzar.
+- La barra inferior muestra la carga. Franja ROJA: si sueltas ahí, la tostada cae
+  en el tarro de mermelada y rebota hacia la pared. Franja VERDE (con el resorte
+  mejorado): la tostada llega directo a la pared.
+- Solo las tostadas que se pegan en la pared suman puntos.
+- T: abre la tienda de mejoras (resorte, mantequilla, recarga, ayudante).
+- Objetivo: llegar a 300 tostadas.
+
+FÍSICA IMPLEMENTADA (sin Rigidbody ni colliders de Unity)
+1. Resorte masa-resorte-amortiguador (integración de Euler semi-implícita).
+2. Tiro parabólico de la tostada con gravedad propia (4 subpasos por frame físico).
+3. Colisiones AABB propias: pegado y deslizamiento en la pared con fricción viscosa,
+   rebote con restitución en el suelo, y rebote en el tarro con e = 1,5 cuya velocidad
+   horizontal se despeja de la ecuación del tiro parabólico para llegar a la pared.
+4. Predictor: re-simula el resorte y el vuelo para dibujar las franjas de la barra.
+
+VERSIÓN EN LÍNEA
+La versión web (inicio de sesión, guardado en base de datos, ranking y el
+NPC "Tosti" con IA local) está publicada en el enlace indicado en la entrega.
+Corre sobre una arquitectura de servidores propia, por eso este ejecutable
+se juega en modo sin conexión.
+
+Código y bitácora: https://github.com/OGJake9/Toaster
