@@ -20,8 +20,8 @@ MEJORAS = [
 ]
 RESORTE, MANTEQUILLA, RECARGA, AYUDANTE = range(4)
 
-RECARGA_BASE = 0.8
-RECARGA_FACTOR = 0.85
+RECARGA_BASE = 3.0     # [s] espera inicial entre tostadas
+RECARGA_FACTOR = 0.8   # cada nivel de Recarga rápida la reduce 20 %
 PRODUCCION_POR_AYUDANTE = 0.5
 
 # Margen para no castigar a jugadores honestos (latencia, redondeos, guardado tardío)

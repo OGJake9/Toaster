@@ -28,6 +28,8 @@ public class ControladorJuego : MonoBehaviour
     public bool MostrandoMeta { get; private set; }
     /// <summary>Segundos de juego activo (sin contar menú, tienda ni pantallas de pausa).</summary>
     public float TiempoPartida { get; private set; }
+    /// <summary>Momento (tiempo real) del último rebote en el tarro, para el aviso "¡Mermelada!".</summary>
+    public float UltimoReboteTarro { get; private set; } = -99f;
 
     private bool Pausado => EnMenu || TiendaAbierta || MostrandoMeta;
     private bool Escribiendo => panelTosti != null && panelTosti.Escribiendo;
@@ -247,12 +249,18 @@ public class ControladorJuego : MonoBehaviour
         if (prefabTostada != null)
         {
             Tostada t = Instantiate(prefabTostada);
-            t.Iniciar(posicion, velocidad, AlPegarseEnPared);
+            t.Iniciar(posicion, velocidad, AlPegarseEnPared, AlRebotarEnTarro);
         }
 
         lanzamientosSinImpacto++;
         if (lanzamientosSinImpacto == lanzamientosParaAyuda && panelTosti != null)
             panelTosti.Evento("sin_impactos");
+    }
+
+    private void AlRebotarEnTarro(Tostada tostada)
+    {
+        UltimoReboteTarro = Time.unscaledTime;
+        Debug.Log("¡Mermelada! Rebote potenciado hacia la pared.");
     }
 
     private void AlPegarseEnPared(Tostada tostada)

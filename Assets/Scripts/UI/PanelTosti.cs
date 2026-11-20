@@ -18,6 +18,8 @@ public class PanelTosti : MonoBehaviour
     [SerializeField] private ServicioAPI api;
     [Tooltip("Segundos mínimos entre comentarios automáticos de Tosti")]
     [SerializeField] private float esperaEntreEventos = 15f;
+    [Tooltip("Imagen de Tosti para el avatar (opcional)")]
+    [SerializeField] private Sprite spriteTosti;
 
     private const float EsperaServidor = 3.5f;   // el servidor exige 3 s entre mensajes
 
@@ -67,6 +69,13 @@ public class PanelTosti : MonoBehaviour
                                            FabricaUI.ColorTextoBoton);
         nombre.fontStyle = FontStyle.Bold;
         FabricaUI.Estirar(nombre.rectTransform, Vector2.zero, Vector2.one);
+        if (spriteTosti != null)
+        {
+            avatar.sprite = spriteTosti;
+            avatar.color = Color.white;
+            avatar.preserveAspect = true;
+            nombre.gameObject.SetActive(false);
+        }
 
         textoBurbuja = FabricaUI.CrearTexto("Burbuja", panel.transform, "", 18, TextAnchor.UpperLeft, FabricaUI.ColorTexto);
         textoBurbuja.horizontalOverflow = HorizontalWrapMode.Wrap;

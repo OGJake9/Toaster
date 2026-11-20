@@ -11,6 +11,10 @@ using UnityEngine;
 ///    (choque perfectamente inelástico) y baja con fricción viscosa:
 ///       m·dv/dt = -m·g - b·v   →   velocidad terminal  v_t = m·g / b
 ///
+/// TARRO DE MERMELADA — si el PRIMER contacto de la tostada es caer sobre el tarro, rebota
+///    con restitución mayor que 1 (e > 1, aporta energía) y sale en un nuevo tiro parabólico
+///    calculado para alcanzar la pared: problema inverso del movimiento parabólico.
+///
 /// 3. EN EL SUELO — al caer sobre una superficie rebota con coeficiente de
 ///    restitución e (v_y' = -e·v_y) y pierde velocidad horizontal por fricción.
 ///    Cuando el rebote es muy pequeño se detiene y desaparece después de un tiempo.
@@ -42,17 +46,30 @@ public class Tostada : MonoBehaviour
     [SerializeField] private float umbralReposo = 0.3f;
     [SerializeField] private float tiempoVidaEnSuelo = 2f;
 
+    [Header("Tarro de mermelada (potenciador)")]
+    [Tooltip("Coeficiente de restitución del tarro (mayor que 1 = rebote potenciado)")]
+    [SerializeField] private float restitucionMermelada = 1.5f;
+    [SerializeField] private float vyMinMermelada = 7f;   // [m/s]
+    [SerializeField] private float vyMaxMermelada = 8f;   // [m/s]
+
     private Estado estado = Estado.Volando;
     private Vector2 posicion;
     private Vector2 velocidad;
     private float temporizador;
     private Action<Tostada> alPegarseEnPared;
+    private Action<Tostada> alRebotarEnTarro;
+    private bool yaToco;   // el tarro solo funciona en la PRIMERA caída
 
-    private Vector2 MitadTamano => Vector2.Scale(tamanoBase, (Vector2)transform.lossyScale) * 0.5f;
+    public float Gravedad => gravedad;
+    public int Subpasos => subpasos;
+
+    public Vector2 MitadTamano => Vector2.Scale(tamanoBase, (Vector2)transform.lossyScale) * 0.5f;
 
     /// <summary>Se llama justo después de crear la tostada.</summary>
-    public void Iniciar(Vector2 posicionInicial, Vector2 velocidadInicial, Action<Tostada> callbackPared)
+    public void Iniciar(Vector2 posicionInicial, Vector2 velocidadInicial, Action<Tostada> callbackPared,
+                        Action<Tostada> callbackTarro = null)
     {
+        alRebotarEnTarro = callbackTarro;
         posicion = posicionInicial;
         velocidad = velocidadInicial;
         alPegarseEnPared = callbackPared;
@@ -115,6 +132,17 @@ public class Tostada : MonoBehaviour
             bool choqueLateral = normal.x != 0f;
             bool cayendoEncima = normal.y > 0f;
 
+            // Potenciador: solo si es la PRIMERA vez que la tostada toca algo y cae sobre el tarro.
+            if (estado == Estado.Volando && sup.Tipo == TipoSuperficie.Mermelada && cayendoEncima
+                && !yaToco && velocidad.y < 0f)
+            {
+                yaToco = true;
+                ReboteMermelada();
+                alRebotarEnTarro?.Invoke(this);
+                continue;
+            }
+            yaToco = true;
+
             if (estado == Estado.Volando && choqueLateral && sup.Tipo == TipoSuperficie.Pared)
             {
                 // Choque perfectamente inelástico: se pega y empieza a deslizar.
@@ -145,6 +173,64 @@ public class Tostada : MonoBehaviour
                 velocidad.y = 0f;   // golpe por debajo (techo)
             }
         }
+    }
+
+    /// <summary>
+    /// Rebote potenciado del tarro. Velocidad vertical: v_y' = e·|v_y| con e > 1 (acotada).
+    /// Velocidad horizontal: se despeja del tiro parabólico para que la tostada llegue a la
+    /// pared justo a la altura de su centro:
+    ///     y_obj - y0 = v_y·t - ½·g·t²   →   t = (v_y + √(v_y² - 2·g·Δy)) / g   →   v_x = Δx / t
+    /// </summary>
+    private void ReboteMermelada()
+    {
+        float vy = Mathf.Clamp(-velocidad.y * restitucionMermelada, vyMinMermelada, vyMaxMermelada);
+        float vx = velocidad.x;
+        ColisionAABB pared = BuscarPared();
+        if (pared != null)
+        {
+            float dy = pared.Centro.y - posicion.y;
+            float discriminante = vy * vy - 2f * gravedad * dy;
+            if (discriminante > 0f)
+            {
+                float t = (vy + Mathf.Sqrt(discriminante)) / gravedad;
+                float frenteDeLaPared = pared.Centro.x - pared.MitadTamano.x - MitadTamano.x;
+                vx = (frenteDeLaPared - posicion.x) / t;
+            }
+        }
+        velocidad = new Vector2(vx, vy);
+    }
+
+    private static ColisionAABB BuscarPared()
+    {
+        foreach (ColisionAABB sup in ColisionAABB.Todas)
+            if (sup.Tipo == TipoSuperficie.Pared) return sup;
+        return null;
+    }
+
+    public enum ResultadoTiro { Nada, Tarro, Pared }
+
+    /// <summary>
+    /// Simula un tiro con la MISMA integración que el juego (Euler semi-implícito con sub-pasos)
+    /// y dice qué toca primero. Lo usa PredictorTiro para marcar en la barra la carga correcta.
+    /// </summary>
+    public static ResultadoTiro Simular(Vector2 pos, Vector2 vel, Vector2 mitad, float g, int subpasos, float dtFijo)
+    {
+        float dt = dtFijo / subpasos;
+        for (int i = 0; i < 8000; i++)
+        {
+            vel.y -= g * dt;
+            pos += vel * dt;
+            foreach (ColisionAABB sup in ColisionAABB.Todas)
+            {
+                if (!ColisionAABB.Interseccion(pos, mitad, sup.Centro, sup.MitadTamano, out Vector2 n, out _))
+                    continue;
+                if (sup.Tipo == TipoSuperficie.Pared && n.x != 0f) return ResultadoTiro.Pared;
+                if (sup.Tipo == TipoSuperficie.Mermelada && n.y > 0f && vel.y < 0f) return ResultadoTiro.Tarro;
+                return ResultadoTiro.Nada;
+            }
+            if (pos.y < -20f) return ResultadoTiro.Nada;
+        }
+        return ResultadoTiro.Nada;
     }
 
     private void Detener()

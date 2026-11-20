@@ -12,6 +12,9 @@ public class InterfazJuego : MonoBehaviour
 {
     [SerializeField] private ControladorJuego controlador;
     [SerializeField] private PalancaTostadora palanca;
+    [SerializeField] private PredictorTiro predictor;
+    [Tooltip("Muestra en la barra las franjas de carga correctas (tarro y pared)")]
+    [SerializeField] private bool mostrarFranjas = true;
 
     private class FilaMejora
     {
@@ -31,6 +34,11 @@ public class InterfazJuego : MonoBehaviour
     private GameObject panelMeta;
     private Text textoMetaDetalle;
     private RectTransform rellenoCarga;
+    private Image imagenRelleno;
+    private RectTransform franjaTarro;
+    private RectTransform franjaPared;
+    private Text etiquetaCarga;
+    private Text textoMermelada;
     private GameObject panelTienda;
     private Text textoTostadasTienda;
     private FilaMejora[] filas;
@@ -77,7 +85,7 @@ public class InterfazJuego : MonoBehaviour
             }
         }
 
-        rellenoCarga.anchorMax = new Vector2(palanca.CargaNormalizada, 1f);
+        ActualizarBarra();
 
         if (panelTienda.activeSelf != controlador.TiendaAbierta)
             panelTienda.SetActive(controlador.TiendaAbierta);
@@ -112,16 +120,75 @@ public class InterfazJuego : MonoBehaviour
         textoBotonSalir.fontSize = 20;
 
         // Barra de carga del resorte
-        Text etiqueta = FabricaUI.CrearTexto("EtiquetaCarga", canvas, "Mantén ESPACIO para cargar", 22,
-                                             TextAnchor.MiddleCenter, FabricaUI.ColorTexto);
-        FabricaUI.Colocar(etiqueta.rectTransform, new Vector2(0.5f, 0), new Vector2(0, 62), new Vector2(500, 30));
+        etiquetaCarga = FabricaUI.CrearTexto("EtiquetaCarga", canvas, "", 22, TextAnchor.MiddleCenter, FabricaUI.ColorTexto);
+        etiquetaCarga.fontStyle = FontStyle.Bold;
+        etiquetaCarga.gameObject.AddComponent<Outline>().effectColor = new Color(0, 0, 0, 0.8f);
+        FabricaUI.Colocar(etiquetaCarga.rectTransform, new Vector2(0.5f, 0), new Vector2(0, 62), new Vector2(600, 30));
 
         Image fondo = FabricaUI.CrearImagen("BarraCarga", canvas, new Color(0, 0, 0, 0.6f));
         FabricaUI.Colocar(fondo.rectTransform, new Vector2(0.5f, 0), new Vector2(0, 28), new Vector2(420, 26));
 
-        Image relleno = FabricaUI.CrearImagen("Relleno", fondo.transform, FabricaUI.ColorBoton);
-        rellenoCarga = relleno.rectTransform;
+        imagenRelleno = FabricaUI.CrearImagen("Relleno", fondo.transform, FabricaUI.ColorBoton);
+        rellenoCarga = imagenRelleno.rectTransform;
         FabricaUI.Estirar(rellenoCarga, Vector2.zero, new Vector2(0, 1));
+
+        // Franjas de carga correcta (encima del relleno, semitransparentes)
+        franjaTarro = FabricaUI.CrearImagen("FranjaTarro", fondo.transform, new Color(0.85f, 0.12f, 0.2f, 0.65f)).rectTransform;
+        franjaPared = FabricaUI.CrearImagen("FranjaPared", fondo.transform, new Color(0.2f, 0.75f, 0.3f, 0.65f)).rectTransform;
+
+        // Aviso "¡Mermelada!" al acertar el tarro
+        textoMermelada = FabricaUI.CrearTexto("Mermelada", canvas, "¡MERMELADA!", 54, TextAnchor.MiddleCenter,
+                                              new Color(0.85f, 0.12f, 0.2f, 1f));
+        textoMermelada.fontStyle = FontStyle.Bold;
+        textoMermelada.gameObject.AddComponent<Outline>().effectColor = Color.white;
+        FabricaUI.Colocar(textoMermelada.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, 120), new Vector2(700, 80));
+    }
+
+    private void ActualizarBarra()
+    {
+        bool cargada = palanca.TostadaCargada;
+        if (cargada)
+        {
+            rellenoCarga.anchorMax = new Vector2(palanca.CargaNormalizada, 1f);
+            imagenRelleno.color = FabricaUI.ColorBoton;
+        }
+        else
+        {
+            rellenoCarga.anchorMax = new Vector2(palanca.ProgresoRecarga, 1f);
+            imagenRelleno.color = new Color(0.55f, 0.55f, 0.55f, 1f);
+        }
+
+        bool hayTarro = mostrarFranjas && predictor != null && predictor.ZonaTarro.x >= 0f;
+        bool hayPared = mostrarFranjas && predictor != null && predictor.ZonaPared.x >= 0f;
+        ColocarFranja(franjaTarro, hayTarro && cargada, hayTarro ? predictor.ZonaTarro : Vector2.zero);
+        ColocarFranja(franjaPared, hayPared && cargada, hayPared ? predictor.ZonaPared : Vector2.zero);
+
+        if (!cargada) etiquetaCarga.text = "Recargando...";
+        else if (hayPared) etiquetaCarga.text = "Suelta ESPACIO en la franja: roja = tarro, verde = pared";
+        else if (hayTarro) etiquetaCarga.text = "Suelta ESPACIO en la franja roja para caer en el tarro";
+        else etiquetaCarga.text = "Mantén ESPACIO para cargar";
+
+        // Aviso del tarro: visible 1.2 s y se desvanece
+        float t = Time.unscaledTime - controlador.UltimoReboteTarro;
+        bool visible = t < 1.2f;
+        if (textoMermelada.gameObject.activeSelf != visible) textoMermelada.gameObject.SetActive(visible);
+        if (visible)
+        {
+            Color c = textoMermelada.color;
+            c.a = 1f - Mathf.Clamp01((t - 0.6f) / 0.6f);
+            textoMermelada.color = c;
+        }
+    }
+
+    private static void ColocarFranja(RectTransform franja, bool visible, Vector2 zona)
+    {
+        if (franja.gameObject.activeSelf != visible) franja.gameObject.SetActive(visible);
+        if (!visible) return;
+        // Margen de media muestra a cada lado para que la franja no quede de ancho cero
+        franja.anchorMin = new Vector2(Mathf.Clamp01(zona.x - 0.005f), 0f);
+        franja.anchorMax = new Vector2(Mathf.Clamp01(zona.y + 0.005f), 1f);
+        franja.offsetMin = Vector2.zero;
+        franja.offsetMax = Vector2.zero;
     }
 
     // ===================== META =====================

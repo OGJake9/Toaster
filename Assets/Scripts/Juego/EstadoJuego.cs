@@ -46,9 +46,9 @@ public class EstadoJuego
 
     // ---------- Parámetros de balance ----------
     public const float K_BASE = 80f;                // constante del resorte base [N/m]
-    public const float K_FACTOR_NIVEL = 1.25f;      // cada nivel multiplica k
-    public const float RECARGA_BASE = 0.8f;         // [s]
-    public const float RECARGA_FACTOR = 0.85f;      // cada nivel multiplica el tiempo
+    public const float K_FACTOR_NIVEL = 1.2f;       // cada nivel multiplica k (nivel 6+: tiro directo a la pared)
+    public const float RECARGA_BASE = 3.0f;         // [s] espera inicial entre tostadas
+    public const float RECARGA_FACTOR = 0.8f;       // cada nivel de Recarga rápida la reduce 20 % (nivel 8: 0.5 s)
     public const double PRODUCCION_POR_AYUDANTE = 0.5; // [tostadas/s] por nivel
     public const double META_TOSTADAS = 300;        // objetivo del vertical slice (igual que en el backend)
 

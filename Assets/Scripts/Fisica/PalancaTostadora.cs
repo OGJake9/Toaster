@@ -48,6 +48,8 @@ public class PalancaTostadora : MonoBehaviour
     private bool tostadaCargada = true;
     private bool armada;             // true solo si el jugador comprimió el resorte
     private float temporizadorRecarga;
+    private float recargaActual = 1f;
+    private bool listo;
     private Vector3 posicionReposo;
 
     // Datos expuestos para depuración / informe
@@ -63,9 +65,17 @@ public class PalancaTostadora : MonoBehaviour
     /// <summary>0 = sin cargar, 1 = compresión máxima (para la barra de carga).</summary>
     public float CargaNormalizada => armada ? Mathf.Clamp01(-x / compresionMaxima) : 0f;
 
+    /// <summary>0 = recién lanzó, 1 = tostada lista.</summary>
+    public float ProgresoRecarga => tostadaCargada ? 1f : Mathf.Clamp01(1f - temporizadorRecarga / recargaActual);
+
+    public float CompresionMaxima => compresionMaxima;
+    public Vector2 Direccion => transform.up;
+    public bool Listo => listo;
+
     private void Start()
     {
         posicionReposo = plataforma.localPosition;
+        listo = true;
     }
 
     private void Update()
@@ -116,7 +126,8 @@ public class PalancaTostadora : MonoBehaviour
             {
                 armada = false;
                 tostadaCargada = false;
-                temporizadorRecarga = controlador != null ? controlador.Estado.TiempoRecarga() : tiempoRecarga;
+                recargaActual = controlador != null ? controlador.Estado.TiempoRecarga() : tiempoRecarga;
+                temporizadorRecarga = recargaActual;
 
                 Vector2 direccion = transform.up;   // eje de la tostadora (incluye su rotación)
                 OnLanzamiento?.Invoke(plataforma.position, direccion * v);
@@ -125,5 +136,31 @@ public class PalancaTostadora : MonoBehaviour
 
         // La plataforma se mueve sobre el eje local Y de la tostadora.
         plataforma.localPosition = posicionReposo + Vector3.up * x;
+    }
+
+    /// <summary>
+    /// Simula soltar el resorte desde una compresión dada, con la MISMA integración que FixedUpdate,
+    /// y devuelve la velocidad y la posición con que saldría la tostada. Lo usa PredictorTiro.
+    /// </summary>
+    public bool SimularSalida(float compresion, float k, out float velocidadSalida, out Vector2 posicionSalida)
+    {
+        float dt = Time.fixedDeltaTime;
+        float xs = -compresion, vs = 0f;
+        for (int i = 0; i < 2000; i++)
+        {
+            float xAnterior = xs;
+            float a = (-k * xs - amortiguamiento * vs) / masa;
+            vs += a * dt;
+            xs += vs * dt;
+            if (xAnterior < 0f && xs >= 0f && vs > 0f)
+            {
+                velocidadSalida = vs;
+                posicionSalida = transform.TransformPoint(posicionReposo + Vector3.up * xs);
+                return true;
+            }
+        }
+        velocidadSalida = 0f;
+        posicionSalida = Vector2.zero;
+        return false;
     }
 }

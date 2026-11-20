@@ -80,10 +80,10 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 2
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 0.854902, g: 0.6470588, b: 0.1254902, a: 1}
+  m_Sprite: {fileID: -7935225308187133660, guid: c87bd188411df2342872e631ac91b8a9, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -113,3 +113,6 @@ MonoBehaviour:
   friccionSuelo: 0.5
   umbralReposo: 0.3
   tiempoVidaEnSuelo: 2
+  restitucionMermelada: 1.5
+  vyMinMermelada: 7
+  vyMaxMermelada: 8

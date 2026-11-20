@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TipoSuperficie { Pared, Suelo }
+public enum TipoSuperficie { Pared, Suelo, Mermelada }
 
 /// <summary>
 /// Caja de colisión propia, alineada a los ejes (AABB). Reemplaza a BoxCollider2D.
@@ -58,7 +58,8 @@ public class ColisionAABB : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.color = tipo == TipoSuperficie.Pared ? Color.red : Color.green;
+        Gizmos.color = tipo == TipoSuperficie.Pared ? Color.red
+                     : tipo == TipoSuperficie.Mermelada ? Color.magenta : Color.green;
         Gizmos.DrawWireCube(Centro, MitadTamano * 2f);
     }
 }
