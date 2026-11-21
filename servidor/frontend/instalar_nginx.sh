@@ -31,7 +31,16 @@ sudo rm -f /etc/nginx/sites-enabled/default
 
 grep -q "application/wasm" /etc/nginx/mime.types && echo "Tipo .wasm: OK"
 
+echo "== Arranque después de Tailscale (si no, Nginx falla al reservar la IP 100.x al encender la VM) =="
+sudo mkdir -p /etc/systemd/system/nginx.service.d
+printf '[Unit]\nAfter=tailscaled.service network-online.target\nWants=tailscaled.service network-online.target\n' \
+  | sudo tee /etc/systemd/system/nginx.service.d/esperar-tailscale.conf > /dev/null
+echo 'net.ipv4.ip_nonlocal_bind = 1' | sudo tee /etc/sysctl.d/99-tostadora-nginx.conf > /dev/null
+sudo sysctl --system > /dev/null
+sudo systemctl daemon-reload
+
 echo "== Probando y recargando Nginx =="
 sudo nginx -t
+# restart (no reload): si cambian las direcciones de escucha, reload falla en silencio
 sudo systemctl restart nginx
 echo "NGINX LISTO"

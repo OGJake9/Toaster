@@ -24,7 +24,7 @@ sudo apt-mark hold wazuh-agent > /dev/null
 echo "== Iniciando el agente =="
 sudo systemctl daemon-reload
 sudo systemctl enable --now wazuh-agent
-sleep 5
+sleep 10
 systemctl is-active wazuh-agent
-sudo grep -E "Connected to the server|ERROR" /var/ossec/logs/ossec.log | tail -3
+sudo grep -E "Connected to the server|ERROR" /var/ossec/logs/ossec.log | tail -3 || true
 echo "AGENTE LISTO: $NOMBRE -> $MANAGER"
