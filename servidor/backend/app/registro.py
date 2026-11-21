@@ -1,8 +1,9 @@
 """
 Registro de eventos. Todo evento de seguridad se escribe en una sola línea con
-formato clave=valor para que Wazuh lo pueda decodificar:
+formato syslog estándar (fecha, equipo, programa) seguido de pares clave=valor,
+para que el pre-decodificador de Wazuh reconozca el programa y lo decodifique:
 
-    2026-11-19 10:00:00 tostadora-backend WARNING evento=login_fallido usuario=ana ip=1.2.3.4
+    Nov 19 10:00:00 sg-vargas-backend tostadora-backend: WARNING evento=login_fallido usuario=ana ip=1.2.3.4
 
 Nunca se registran contraseñas, tokens ni mensajes completos del jugador.
 """
@@ -12,8 +13,8 @@ import re
 
 from . import config
 
-_formato = logging.Formatter("%(asctime)s tostadora-backend %(levelname)s %(message)s",
-                             datefmt="%Y-%m-%d %H:%M:%S")
+_formato = logging.Formatter("%(asctime)s sg-vargas-backend tostadora-backend: %(levelname)s %(message)s",
+                             datefmt="%b %d %H:%M:%S")
 
 log = logging.getLogger("tostadora")
 log.setLevel(logging.INFO)
